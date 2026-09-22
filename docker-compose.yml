@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: abduls-tobacco-backend
+    container_name: abduls_tobacco_backend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-4000}:4000"
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${DB_USER:-abduls_user}
+      DB_PASSWORD: ${DB_PASSWORD:-abduls_pass}
+      DB_NAME: ${DB_NAME:-abdulsTobacco}
+      JWT_SECRET: ${JWT_SECRET:-change_this_secret_in_production}
+    volumes:
+      - uploads_data:/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - abduls_net
+
+  mysql:
+    image: mariadb:10.11
+    container_name: abduls_tobacco_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_pass}
+      MYSQL_DATABASE: ${DB_NAME:-abdulsTobacco}
+      MYSQL_USER: ${DB_USER:-abduls_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-abduls_pass}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - abduls_net
+
+volumes:
+  mysql_data:
+  uploads_data:
+
+networks:
+  abduls_net:
+    driver: bridge
