@@ -1,0 +1,13 @@
+title = "Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowed files and paths"
+paths = [
+    '''node_modules/''',
+    '''dist/''',
+    '''build/''',
+    '''coverage/'''
+]
